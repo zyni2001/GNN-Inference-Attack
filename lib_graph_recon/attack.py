@@ -12,13 +12,13 @@ import matplotlib.pyplot as plt
 from utils.convert import to_networkx_adj
 from lib_graph_recon.weisfeiler_lehman import is_possibly_isomorphic, subtree_kernel
 from lib_graph_recon.gk_weisfeiler_lehman import GK_WL
-import config
+from config_new import Config
 
 
 class Attack:
     def __init__(self, target_model, max_nodes, args):
         self.logger = logging.getLogger('attack')
-
+        self.config = Config(args['iteration'])
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.target_model = target_model.to(self.device)
         self.max_nodes = max_nodes
@@ -121,7 +121,7 @@ class Attack:
         nx.draw(gr1, node_size=500, with_labels=True, ax=axes[0])
         nx.draw(gr2, node_size=500, with_labels=True, ax=axes[1])
         plt.show()
-        plt.savefig(config.ATTACK_DATA_PATH+"/graph_reconstruct/visualization/"+save_name+".pdf")
+        plt.savefig(self.config.ATTACK_DATA_PATH+"/graph_reconstruct/visualization/"+save_name+".pdf")
         a = 1
 
     def isomorphism_test(self, ori_adj, recon_adj):
@@ -172,7 +172,7 @@ class Attack:
         plt.tight_layout()
         if out is None:
             out = title[self.graph_recon_stat]
-        plt.savefig(config.PLOT_PATH + out + ".pdf", bbox_inches="tight")
+        plt.savefig(self.config.PLOT_PATH + out + ".pdf", bbox_inches="tight")
         plt.show()
 
         a = 1
@@ -300,7 +300,7 @@ class Attack:
         # plt.annotate("ACC:%.3f AUC:%.3f" % (acc, auc), xy=(x_lim_max / 2, 50))
         plt.legend()
         plt.tight_layout()
-        plt.savefig(config.PLOT_PATH + save_name + '.pdf')
+        plt.savefig(self.config.PLOT_PATH + save_name + '.pdf')
         plt.show()
 
         a=1

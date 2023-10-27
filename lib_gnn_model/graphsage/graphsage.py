@@ -9,7 +9,7 @@ from torch_geometric.data import NeighborSampler
 
 from lib_gnn_model.graphsage.graphsage_net import GraphSageNet
 from lib_gnn_model.gnn_base import GNNBase
-import config
+from config_new import Config
 
 
 class GraphSAGE(GNNBase):

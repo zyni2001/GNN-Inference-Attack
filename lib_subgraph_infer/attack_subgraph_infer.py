@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from lib_subgraph_infer.attack import Attack
 from lib_subgraph_infer.subgraph_infer_model import SubgraphInferModel
 from lib_subgraph_infer.subgraph_dataset import SubgraphDataset
-
+import concurrent.futures
 
 class AttackSubgraphInfer(Attack):
     def __init__(self, target_model, shadow_model, embedding_dim, num_classes, args):
@@ -17,11 +17,15 @@ class AttackSubgraphInfer(Attack):
 
     def generate_train_data(self, pos_dataset, neg_dataset):
         self.logger.info('generating train data')
-
+        
+        # test on one graph for debug
+        # pos_dataset = [pos_dataset[0]]
+        
         self.train_graph_embedding = np.zeros([len(pos_dataset), self.embedding_dim])
         self.train_positive_subgraph = []
 
         for i, data in enumerate(pos_dataset):
+            self.logger.info('generating %s training data' % (i,))
             self.logger.debug('generating %s training data' % (i,))
 
             x, adj, mask = self.generate_input_data(data)
@@ -29,25 +33,65 @@ class AttackSubgraphInfer(Attack):
 
             self.train_graph_embedding[i] = self.shadow_model.graph_embedding.cpu().detach().numpy()
             self.train_positive_subgraph.append(self._gen_subgraph_data(data))
+        # for i, data in enumerate(pos_dataset_ori):
+        #     self.logger.info('generating %s training data' % (i,))
+        #     self.logger.debug('generating %s training data' % (i,))
+        #     self.train_positive_subgraph.append(self._gen_subgraph_data(data))
 
-        self.train_negative_subgraph = self._gen_negative_subgraph(neg_dataset, len(pos_dataset))
+        # # test on one graph for debug
+        # # neg_dataset = [neg_dataset[0]]
+        # ################## Use one of the following two options
+        # self.train_negative_subgraph = self._gen_negative_subgraph(neg_dataset, len(pos_dataset))
+        # ##################
+        self.train_negative_subgraph = []
+        num_subgraph = len(pos_dataset)
+        graphs = neg_dataset
+        for i in range(num_subgraph):
+            self.logger.debug('generating %s negative subgraphs' % (i,))
+            self.logger.info('generating %s negative subgraphs' % (i,))
+
+            graph_index = np.random.choice(np.arange(len(graphs)))
+            graph = graphs[int(graph_index)]
+            self.train_negative_subgraph.append(self._gen_subgraph_data(graph))
+        ##################
 
     def generate_test_data(self, pos_dataset, neg_dataset):
         self.logger.info('generating test data')
+        # test on one graph for debug
+        # pos_dataset = [pos_dataset[0]]
 
         self.test_graph_embedding = np.zeros([len(pos_dataset), self.embedding_dim])
         self.test_positive_subgraph = []
 
         for i, data in enumerate(pos_dataset):
             self.logger.debug('generating %s testing data' % (i,))
+            self.logger.info('generating %s testing data' % (i,))
 
             x, adj, mask = self.generate_input_data(data)
             self.target_model(x, adj, mask)
 
-            self.test_graph_embedding[i] = self.target_model.graph_embedding.cpu().detach().numpy()
+            self.test_graph_embedding[i] = self.target_model.graph_embedding.cpu().detach().numpy() # generate Hgs
             self.test_positive_subgraph.append(self._gen_subgraph_data(data))
+        # for i, data in enumerate(pos_dataset_ori):
+        #     self.logger.debug('generating %s testing data' % (i,))
+        #     self.logger.info('generating %s testing data' % (i,))
+        #     self.test_positive_subgraph.append(self._gen_subgraph_data(data))
 
-        self.test_negative_subgraph = self._gen_negative_subgraph(neg_dataset, len(pos_dataset))
+        # test on one graph for debug
+        # neg_dataset = [neg_dataset[0]]
+        # self.test_negative_subgraph = self._gen_negative_subgraph(neg_dataset, len(pos_dataset))
+        ##################
+        self.test_negative_subgraph = []
+        num_subgraph = len(pos_dataset)
+        graphs = neg_dataset
+        for i in range(num_subgraph):
+            self.logger.debug('generating %s negative subgraphs' % (i,))
+            self.logger.info('generating %s negative subgraphs' % (i,))
+
+            graph_index = np.random.choice(np.arange(len(graphs)))
+            graph = graphs[int(graph_index)]
+            self.test_negative_subgraph.append(self._gen_subgraph_data(graph))
+        #################
 
     def generate_dataloader(self):
         self.logger.info('generating dataloader')
@@ -88,6 +132,29 @@ class AttackSubgraphInfer(Attack):
         self.train_positive_subgraph = load_data['train_positive_subgraph']
         self.train_negative_subgraph = load_data['train_negative_subgraph']
         self.test_graph_embedding = load_data['test_graph_embedding']
+        self.test_positive_subgraph = load_data['test_positive_subgraph']
+        self.test_negative_subgraph = load_data['test_negative_subgraph']
+    
+    def generate_train_data_our(self, pos_dataset, neg_dataset, pos_indices, neg_indices, embed_list):
+        # generate embedding for attack training data
+        self.train_graph_embedding = np.zeros([len(pos_dataset), self.embedding_dim])
+        for i, index in enumerate(pos_indices):
+            self.logger.info('Attach embedding %s' % (index,))
+            self.train_graph_embedding[i] = embed_list[index]
+
+    def generate_test_data_our(self, pos_dataset, neg_dataset, pos_indices, neg_indices, embed_list):
+        # generate embedding for attack testing data
+        self.test_graph_embedding = np.zeros([len(pos_dataset), self.embedding_dim])
+        for i, index in enumerate(pos_indices):
+            self.logger.info('Attach embedding %s' % (index,))
+            self.test_graph_embedding[i] = embed_list[index]
+
+    def load_data_our(self, save_path):
+        load_data = pickle.load(open(save_path, 'rb'))
+        # self.train_graph_embedding = load_data['train_graph_embedding']
+        self.train_positive_subgraph = load_data['train_positive_subgraph']
+        self.train_negative_subgraph = load_data['train_negative_subgraph']
+        # self.test_graph_embedding = load_data['test_graph_embedding']
         self.test_positive_subgraph = load_data['test_positive_subgraph']
         self.test_negative_subgraph = load_data['test_negative_subgraph']
 

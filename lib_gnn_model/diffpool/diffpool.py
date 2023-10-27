@@ -9,7 +9,7 @@ from torch_geometric.datasets import TUDataset
 
 from lib_gnn_model.gnn_base import GNNBase
 from lib_gnn_model.diffpool.diffpool_net import DiffPoolNet
-import config
+from config_new import Config
 
 
 class DiffPool(GNNBase):
@@ -19,7 +19,7 @@ class DiffPool(GNNBase):
         self.logger = logging.getLogger(__name__)
         self.model = DiffPoolNet(feat_dim, num_classes, max_nodes)
 
-    def train_model(self, train_loader, test_loader, num_epochs=100):
+    def train_model(self, train_loader, test_loader, num_epochs=200):
         self.model.train()
         self.model = self.model.to(self.device)
 
@@ -28,6 +28,7 @@ class DiffPool(GNNBase):
 
         for epoch in range(num_epochs):
             self.logger.debug('epoch %s' % (epoch,))
+            self.logger.info('epoch %s' % (epoch,))
 
             for data in train_loader:
                 data = data.to(self.device)
@@ -39,7 +40,11 @@ class DiffPool(GNNBase):
                 optimizer.step()
 
             test_acc = self.evaluate_model(test_loader)
+            train_acc = self.evaluate_model(train_loader)
             self.logger.debug('test acc: %s' % (test_acc,))
+            self.logger.info('test acc: %s' % (test_acc,))
+            self.logger.debug('train acc: %s' % (train_acc,))
+            self.logger.info('train acc: %s' % (train_acc,))
             self.embedding_dim = self.model.graph_embedding.shape[1]
 
     @torch.no_grad()

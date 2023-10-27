@@ -8,7 +8,7 @@ import torch_geometric.transforms as T
 from torch_geometric.data import DataLoader
 from torch_geometric.data import DenseDataLoader
 
-import config
+from config_new import Config
 from lib_dataset.tu_dataset import TUDataset
 from lib_gnn_model.gnn_base import GNNBase
 from lib_gnn_model.mincut_pool.mincut_pool_net import MinCutPoolNet

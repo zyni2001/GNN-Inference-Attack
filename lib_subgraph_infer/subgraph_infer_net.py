@@ -5,7 +5,9 @@ from lib_gnn_model.diffpool.diffpool_net import DiffPoolNet
 import utils.feat_gen_pytorch as feat_gen
 from lib_gnn_model.mean_pool.mean_pool_net import MeanPoolNet
 from lib_gnn_model.mincut_pool.mincut_pool_net import MinCutPoolNet
-
+from lib_gnn_model.diffpool.diffpool import DiffPool
+from lib_gnn_model.mincut_pool.mincut_pool import MinCutPool
+from lib_gnn_model.mean_pool.mean_pool import MeanPool
 
 class SubgraphInferNet(nn.Module):
     def __init__(self, feat_dim, embedding_dim, num_classes, max_nodes, feat_gen_method, args):
@@ -17,21 +19,40 @@ class SubgraphInferNet(nn.Module):
         
         self.graph_pooling = self.determine_graph_pooling_net(feat_dim, num_classes, max_nodes)
         
+        # self.mlp = nn.Sequential(
+        #     nn.Linear(self.attack_feat_dim, 128),
+        #     nn.Linear(128, 50),
+        #     nn.Linear(50, 2)
+        # )
         self.mlp = nn.Sequential(
             nn.Linear(self.attack_feat_dim, 128),
+            # nn.Dropout(0.25),
+            # nn.ReLU(),
             nn.Linear(128, 50),
+            # nn.Dropout(0.25),
+            # nn.ReLU(),
             nn.Linear(50, 2)
         )
 
+
+
     def determine_graph_pooling_net(self, feat_dim, num_classes, max_nodes):
         if self.args['shadow_model'] == 'diff_pool':
-            return DiffPoolNet(feat_dim, num_classes, max_nodes)
+            target_model = DiffPool(feat_dim, num_classes, max_nodes, self.args)
+            model = DiffPoolNet(feat_dim, num_classes, max_nodes)
         elif self.args['shadow_model'] == 'mincut_pool':
-            return MinCutPoolNet(feat_dim, num_classes, max_nodes)
+            target_model = MinCutPool(feat_dim, num_classes, max_nodes, self.args)
+            model = MinCutPoolNet(feat_dim, num_classes, max_nodes)
         elif self.args['shadow_model'] == 'mean_pool':
-            return MeanPoolNet(feat_dim, num_classes)
+            target_model = MeanPool(feat_dim, num_classes, self.args)
+            model = MeanPoolNet(feat_dim, num_classes)
         else:
             raise Exception('unsupported target model')
+        
+        # target_model.load_model(self.args['target_model_file'])
+        # model.load_state_dict(target_model.model.state_dict())
+        
+        return model
     
     def forward(self, x, adj, mask, graph_embedding):
         self.graph_pooling(x, adj, mask)

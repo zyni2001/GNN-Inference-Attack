@@ -9,7 +9,7 @@ import torch_geometric.transforms as T
 from torch_geometric.data import DenseDataLoader
 from torch_geometric.datasets import TUDataset
 
-import config
+from config_new import Config
 from lib_dataset.data_store import DataStore
 from lib_gnn_model.gnn_base import GNNBase
 from lib_gnn_model.graphvae.graphvae_net import GraphVAENet

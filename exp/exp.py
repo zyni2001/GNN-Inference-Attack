@@ -6,25 +6,28 @@ import os
 from torch_geometric.data import DenseDataLoader
 import numpy as np
 
-import config
+from config_new import Config
 from lib_dataset.data_store import DataStore
 from lib_gnn_model.diffpool.diffpool import DiffPool
 from lib_gnn_model.mincut_pool.mincut_pool import MinCutPool
 from lib_gnn_model.mean_pool.mean_pool import MeanPool
-
+import pickle
 
 class Exp:
     def __init__(self, args):
         self.logger = logging.getLogger(__name__)
 
         self.args = args
+        self.config = Config(args['configure'])
         self.start_time = datetime.datetime.now()
         self.dataset_name = args['dataset_name']
 
         self.determine_max_nodes()
         self.data_store = DataStore(args, self.max_nodes)
+        self.args['target_model_file'] = self.data_store.target_model_file
         self.load_data()
-
+        self.embed_list_train, self.embed_list_test = self.data_store.load_embedding(self.skiped_indices)
+        
         self.split_data()
         self.gen_attack_dataset()
 
@@ -40,27 +43,74 @@ class Exp:
             self.max_nodes = self.args['max_nodes']
 
     def load_data(self):
-        self.dataset = self.data_store.load_raw_data(self.dataset_name)
-        self.shadow_dataset = self.data_store.load_raw_data(self.args['shadow_dataset'])
-        target_x = self.dataset.data.x.numpy()
-        shadow_x = self.shadow_dataset.data.x.numpy()
-        self.data_statistic(self.dataset)
-        self.data_statistic(self.shadow_dataset)
+        self.dataset, self.skiped_indices = self.data_store.load_raw_data(self.dataset_name)
+        # if len(self.skiped_indices) == 0:
+            # raise Exception('skiped_indices is empty')
+        # save skiped indices
+        if self.args['is_use_feat']:
+            save_dir = self.config.EMBEDDING_PATH
+            if len(self.skiped_indices) > 0:
+                pickle.dump(self.skiped_indices, open(os.path.join(save_dir, 'skiped_indices.pkl'), 'wb'))
+            else:
+                self.skiped_indices = pickle.load(open(os.path.join(save_dir, 'skiped_indices.pkl'), 'rb'))
+        else:
+            raise NotImplementedError
+        # max_num_nodes = max(data.num_nodes for data in self.dataset)
+        # print(max_num_nodes)
 
+        # self.shadow_dataset = self.data_store.load_raw_data(self.args['shadow_dataset'])
+        # target_x = self.dataset.data.x.numpy()
+        # shadow_x = self.shadow_dataset.data.x.numpy()
+        self.data_statistic(self.dataset)
+        # self.data_statistic(self.shadow_dataset)
+
+    
     def data_statistic(self, dataset):
         self.logger.info("DatasetName: %s,"
-                         "Number of graphs: %s, "
-                         "Average Nodes: %s,"
-                         "Average Edges: %s,"
-                         "Node Features: %s, "
-                         "Number of classes: %s," %
-                         (dataset.name,
-                         len(dataset.data.num_nodes),
-                          np.mean(dataset.data.num_nodes),
-                          dataset.data.num_edges/len(dataset.data.num_nodes)/2,
-                          dataset.num_node_features,
-                          dataset.num_classes,))
+                        "Number of graphs: %s, "
+                        "Average Nodes: %s,"
+                        "Average Edges: %s,"
+                        "Node Features: %s, " %
+                        # "Number of classes: %s," 
+                        (dataset.name,
+                        len(dataset),
+                        dataset.data.num_nodes/len(dataset),
+                        dataset.data.num_edges/len(dataset)/2,
+                        dataset.num_node_features,
+                        # dataset.num_classes,
+                        ))
+        self.logger.info("Max Nodes: %s, ", self.data_store.get_max_nodes(dataset))
+        # if dataset.data.num_nodes type is int, then it is a single graph
+        # if isinstance(dataset.data.num_nodes, int):
+        #     self.logger.info("DatasetName: %s,"
+        #                     "Number of graphs: %s, "
+        #                     "Number of Nodes: %s,"
+        #                     "Number of Edges: %s,"
+        #                     "Node Features: %s, "
+        #                     "Number of classes: %s," %
+        #                     (dataset.name,
+        #                     dataset.data.num_nodes,
+        #                     dataset.data.num_nodes,
+        #                     dataset.data.num_edges/dataset.data.num_nodes/2,
+        #                     dataset.num_node_features,
+        #                     dataset.num_classes,))
+        # # if dataset.data.num_nodes type is numpy.ndarray, then it is a list of graphs
+        # if isinstance(dataset.data.num_nodes, np.ndarray):
+        #     self.logger.info("DatasetName: %s,"
+        #                     "Number of graphs: %s, "
+        #                     "Average Nodes: %s,"
+        #                     "Average Edges: %s,"
+        #                     "Node Features: %s, "
+        #                     "Number of classes: %s," %
+        #                     (dataset.name,
+        #                     len(dataset.data.num_nodes),
+        #                     np.mean(dataset.data.num_nodes),
+        #                     dataset.data.num_edges/len(dataset.data.num_nodes)/2,
+        #                     dataset.num_node_features,
+        #                     dataset.num_classes,))
 
+
+            
     def determine_target_model(self):
         if self.args['target_model'] == 'diff_pool':
             self.target_model = DiffPool(self.dataset.num_features, self.dataset.num_classes, self.max_nodes, self.args)
@@ -84,7 +134,8 @@ class Exp:
     def split_data(self):
         if self.args['is_split'] or not os.path.exists(self.data_store.split_file):
             self.logger.debug('splitting data')
-
+            self.logger.info('splitting data')
+            
             num_total_graphs = len(self.dataset)
             num_target_graphs = int(num_total_graphs * self.args['target_ratio'])
             num_shadow_graphs = int(num_total_graphs * self.args['shadow_ratio'])

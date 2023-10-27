@@ -19,9 +19,15 @@ class SubgraphInferModel(GNNBase):
         self.model.train()
         self.model = self.model.to(self.device)
 
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001, weight_decay=0.0001)
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001, weight_decay=0.001)
         # optimizer = torch.optim.SGD(self.model.parameters(), lr=0.001, weight_decay=0.0001)
+        # optimizer_pooling = torch.optim.Adam(self.model.graph_pooling.parameters(), lr=0.001, weight_decay=0.001)
+        # optimizer_mlp = torch.optim.Adam(self.model.mlp.parameters(), lr=0.001, weight_decay=0.0001)
+
         train_acc_best = 0.0
+        test_acc_best = 0.0
+        train_auc_best = 0.0
+        best_epoch = 0
         state_dict = None
         # torch.autograd.set_detect_anomaly(True)
 
@@ -37,24 +43,38 @@ class SubgraphInferModel(GNNBase):
                 labels = labels.to(self.device)
 
                 optimizer.zero_grad()
+                # optimizer_mlp.zero_grad()
+                # optimizer_pooling.zero_grad()
                 output = self.model(x, adj, mask, graph_embedding)
 
-                # if torch.any(output.isnan()):
-                #     continue
+                if torch.any(output.isnan()):
+                    continue
 
                 loss = self.model.loss(output, labels.view(-1))
                 # with torch.autograd.detect_anomaly():
                 loss.backward()
                 optimizer.step()
+                # optimizer_mlp.step()
+                # optimizer_pooling.step()
 
             train_acc = self.evaluate_model(train_loader)
             test_acc = self.evaluate_model(test_loader)
+            # train_auc = self.calculate_auc(train_loader)
+            # test_auc = self.calculate_auc(test_loader)
             # self.logger.info('test acc: %s' % (test_acc,))
             self.logger.info('train acc: %s, test acc: %s' % (train_acc, test_acc))
+            # self.logger.info('train auc: %s, test auc: %s' % (train_auc, test_auc))
             # self.embedding_dim = self.model.graph_embedding.shape[1]
             if train_acc > train_acc_best:
+                best_epoch = epoch
                 train_acc_best = train_acc
                 state_dict = copy.deepcopy(self.model.state_dict())
+            # if train_auc > train_auc_best:
+                # best_epoch = epoch
+                # train_auc_best = train_auc
+                # state_dict = copy.deepcopy(self.model.state_dict())
+
+        self.logger.info('best epoch: %s' % (best_epoch,))
 
         self.model.load_state_dict(state_dict)
 

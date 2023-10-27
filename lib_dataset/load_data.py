@@ -3,7 +3,7 @@ import os.path as osp
 from lib_dataset.tu_dataset import TUDataset
 import torch_geometric.transforms as T
 
-import config
+from config_new import Config
 
 
 class LoadData:

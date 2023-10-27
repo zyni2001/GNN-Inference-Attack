@@ -31,6 +31,7 @@ def parameter_parser():
     parser.add_argument('--cuda', type=int, default=4,
                         help='specify gpu')
     parser.add_argument('--num_threads', type=int, default=1)
+    parser.add_argument('--configure', type=str, default='test')
 
     ########################## controlling parameters ##############################
     parser.add_argument('--is_split', type=str2bool, default=False)
@@ -41,17 +42,19 @@ def parameter_parser():
     parser.add_argument('--is_upload', type=str2bool, default=False)
     parser.add_argument('--database_name', type=str, default="subgraph_inference_2_no_feat")
     parser.add_argument('--num_runs', type=int, default=1)
-
+    parser.add_argument('--embed_train_itr', type=int, default=1)
+    parser.add_argument('--embed_test_itr', type=int, default=13)
+    
     ########################## target model parameters ###############################
     parser.add_argument('--target_model', type=str, default='mincut_pool',
                         help='options: diff_pool, mincut_pool, mean_pool')
     parser.add_argument('--shadow_model', type=str, default='mincut_pool',
                         help='options: diff_pool, mincut_pool, mean_pool')
     parser.add_argument('--max_nodes', type=int, default=1000)
-    parser.add_argument('--target_ratio', type=int, default=0.4)
-    parser.add_argument('--shadow_ratio', type=int, default=0.0)
-    parser.add_argument('--attack_train_ratio', type=int, default=0.3)
-    parser.add_argument('--attack_test_ratio', type=int, default=0.3)
+    parser.add_argument('--target_ratio', type=float, default=0.4)
+    parser.add_argument('--shadow_ratio', type=float, default=0.0)
+    parser.add_argument('--attack_train_ratio', type=float, default=0.3)
+    parser.add_argument('--attack_test_ratio', type=float, default=0.3)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--num_epochs', type=int, default=100)
 
@@ -64,7 +67,9 @@ def parameter_parser():
 
     ###################### subgraph inference attack parameters ##########################
     parser.add_argument('--is_gen_attack_data', type=str2bool, default=True)
-
+    parser.add_argument('--target_model_path', type=str, default='target_model')
+    parser.add_argument('--is_use_our_embedding', type=str2bool, default=True)
+    
     # parser.add_argument('--graph_pooling_method', type=str, default='mincut_pool',
     #                     help='options: diff_pool, mincut_pool, mean_pool')
     parser.add_argument('--train_sample_method', type=str, default='random_walk',
@@ -72,7 +77,7 @@ def parameter_parser():
     parser.add_argument('--test_sample_method', type=str, default='random_walk',
                         help='options: random_walk, snow_ball, forest_fire')
     parser.add_argument('--sample_node_ratio', type=float, default=0.8)
-    parser.add_argument('--feat_gen_method', type=list, default=['element_l2'],
+    parser.add_argument('--feat_gen_method', type=list, default=['element_l1', 'element_l2'],
                         help='options: concatenate, element_l1, element_l2'
                              'cosine_similarity, l2_distance, l1_distance')
 

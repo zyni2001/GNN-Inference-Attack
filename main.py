@@ -2,15 +2,18 @@ import logging
 import torch
 import os
 
-from dispatcher_shell import DispatcherShell
+# from dispatcher_shell import DispatcherShell
 from exp.exp_property_infer import ExpPropertyInfer
 from exp.exp_subgraph_infer import ExpSubgraphInfer
 from exp.exp_graph_recon import ExpGraphRecon
 from exp.exp_graph_recon_base import ExpGraphReconBase
 from exp.exp_defense_perturb import ExpDefensePerturb
-from exp.exp_defense_adv_train import ExpDefenseAdvTrain
+# from exp.exp_defense_adv_train import ExpDefenseAdvTrain
 from parameter_parser import parameter_parser
-import config
+# import config
+from config_new import Config
+
+
 
 
 def config_logger(save_name):
@@ -24,7 +27,10 @@ def config_logger(save_name):
     ch.setLevel(logging.INFO)
     ch.setFormatter(formatter)
     logger.addHandler(ch)
-
+    # ensure directories for log file exist
+    log_filepath = os.path.join(config.LOG_PATH, save_name + '.txt')
+    os.makedirs(os.path.dirname(log_filepath), exist_ok=True)
+    
     # create file handlers
     fh1 = logging.FileHandler(config.LOG_PATH + save_name + '.txt', 'w')
     fh1.setLevel(logging.INFO)
@@ -89,7 +95,7 @@ def dispatcher_shell():
 if __name__ == "__main__":
     args = parameter_parser()
     # os.environ['CUDA_VISIBLE_DEVICES'] = str(args['cuda'])
-
+    config = Config(args['configure']) 
     if args['is_vary']:
         dispatcher_shell()
         main(args, args['exp'])

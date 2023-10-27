@@ -1,0 +1,39 @@
+INFO:2023-08-15 14:58:36,254: - root - : subgraph_infer_DD_mean_pool_mean_pool_3
+Processing...
+/home/zhiyu/anaconda3/envs/gnn-infer/lib/python3.10/site-packages/torch_geometric/data/in_memory_dataset.py:157: UserWarning: It is not recommended to directly access the internal storage format `data` of an 'InMemoryDataset'. If you are absolutely certain what you are doing, access the internal storage via `InMemoryDataset._data` instead to suppress this warning. Alternatively, you can access stacked individual attributes of every graph via `dataset.{attr_name}`.
+  warnings.warn(msg)
+Done!
+INFO:2023-08-15 14:58:40,880: - exp.exp - : DatasetName: DD,Number of graphs: 1178, Average Nodes: 284.3166383701188,Average Edges: 715.6587436332767,Node Features: 89, 
+INFO:2023-08-15 14:58:40,881: - exp.exp - : DatasetName: DD,Number of graphs: 1178, Average Nodes: 284.3166383701188,Average Edges: 715.6587436332767,Node Features: 89, 
+INFO:2023-08-15 14:58:41,679: - exp.exp - : training target model
+/home/zhiyu/anaconda3/envs/gnn-infer/lib/python3.10/site-packages/torch_geometric/deprecation.py:22: UserWarning: 'data.DenseDataLoader' is deprecated, use 'loader.DenseDataLoader' instead
+  warnings.warn(out)
+INFO:2023-08-15 14:58:42,356: - lib_gnn_model.mean_pool.mean_pool - : epoch 0
+Traceback (most recent call last):
+  File "/home/zhiyu/GNN-Embedding-Leaks-DD/main.py", line 103, in <module>
+    main(args, args['exp'])
+  File "/home/zhiyu/GNN-Embedding-Leaks-DD/main.py", line 54, in main
+    ExpSubgraphInfer(args)
+  File "/home/zhiyu/GNN-Embedding-Leaks-DD/exp/exp_subgraph_infer.py", line 11, in __init__
+    super(ExpSubgraphInfer, self).__init__(args)
+  File "/home/zhiyu/GNN-Embedding-Leaks-DD/exp/exp.py", line 34, in __init__
+    self.train_target_model()
+  File "/home/zhiyu/GNN-Embedding-Leaks-DD/exp/exp.py", line 173, in train_target_model
+    self.target_model.train_model(target_train_loader, target_test_loader, self.args['num_epochs'])
+  File "/home/zhiyu/GNN-Embedding-Leaks-DD/lib_gnn_model/mean_pool/mean_pool.py", line 31, in train_model
+    for data in train_loader:
+  File "/home/zhiyu/anaconda3/envs/gnn-infer/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 633, in __next__
+    data = self._next_data()
+  File "/home/zhiyu/anaconda3/envs/gnn-infer/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 677, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/zhiyu/anaconda3/envs/gnn-infer/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 54, in fetch
+    return self.collate_fn(data)
+  File "/home/zhiyu/anaconda3/envs/gnn-infer/lib/python3.10/site-packages/torch_geometric/loader/dense_data_loader.py", line 12, in collate_fn
+    batch[key] = default_collate([data[key] for data in data_list])
+  File "/home/zhiyu/anaconda3/envs/gnn-infer/lib/python3.10/site-packages/torch/utils/data/_utils/collate.py", line 265, in default_collate
+    return collate(batch, collate_fn_map=default_collate_fn_map)
+  File "/home/zhiyu/anaconda3/envs/gnn-infer/lib/python3.10/site-packages/torch/utils/data/_utils/collate.py", line 119, in collate
+    return collate_fn_map[elem_type](batch, collate_fn_map=collate_fn_map)
+  File "/home/zhiyu/anaconda3/envs/gnn-infer/lib/python3.10/site-packages/torch/utils/data/_utils/collate.py", line 162, in collate_tensor_fn
+    return torch.stack(batch, 0, out=out)
+RuntimeError: stack expects each tensor to be equal size, but got [59, 59] at entry 0 and [137, 137] at entry 1

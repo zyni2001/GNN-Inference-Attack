@@ -152,8 +152,22 @@ class Attack:
     def _num_edges(self, graph):
         return np.count_nonzero(graph.adj.numpy()) / 2
 
+    def prune_nx_graph_using_mask(self, nx_graph, mask):
+        """
+        Prune the networkx graph based on the given mask. 
+        Nodes corresponding to False in the mask will be removed.
+        """
+        nodes_to_remove = [node for node, m in enumerate(mask) if not m]
+        nx_graph.remove_nodes_from(nodes_to_remove)
+        return nx_graph
+    
     def _to_nx_graph(self, graph):
         nx_graph = to_networkx(graph, to_undirected=True)
+        
+        # Prune the networkx graph based on the mask (zhiyu added it)
+        mask_list = graph.mask.tolist()
+        nx_graph = self.prune_nx_graph_using_mask(nx_graph, mask_list)
+
         if not nx.is_connected(nx_graph):
             self.logger.debug('graph unconnected, generate random edge to connect it')
             self._connect_nx_graph(nx_graph)

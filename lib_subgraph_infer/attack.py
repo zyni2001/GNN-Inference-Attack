@@ -50,23 +50,74 @@ class Attack:
             self.feat_gen_fn = feat_gen.element_l2
         else:
             raise Exception('unsupported feature generation method')
+    
+    def reindex_graph(self, graph):
+        mapping = {node: i for i, node in enumerate(graph.nodes())}
+        return nx.relabel_nodes(graph, mapping)
+
+    def prune_nx_graph_using_mask(self, nx_graph, mask):
+        """
+        Prune the networkx graph based on the given mask. 
+        Nodes corresponding to False in the mask will be removed.
+        """
+        nodes_to_remove = [node for node, m in enumerate(mask) if not m]
+        nx_graph.remove_nodes_from(nodes_to_remove)
+        return nx_graph
 
     def generate_subgraph(self, graph):
-        num_sample_nodes = int(graph.num_nodes * self.sample_node_ratio)
+        # num_sample_nodes = int(graph.num_nodes * self.sample_node_ratio)
         nx_graph = to_networkx(graph, to_undirected=True)
-        self.subsample_cls.number_of_nodes = num_sample_nodes
 
+        # # List nodes with no neighbors
+        # isolated_nodes = list(nx.isolates(nx_graph))
+        # # Remove these nodes from the graph
+        # nx_graph.remove_nodes_from(isolated_nodes)
+        # nx_graph = self.reindex_graph(nx_graph)
+        # num_sample_nodes = int(nx_graph.number_of_nodes() * self.sample_node_ratio)
+        
+        # Prune the networkx graph based on the mask
+        mask_list = graph.mask.tolist()
+        nx_graph = self.prune_nx_graph_using_mask(nx_graph, mask_list)
+        num_sample_nodes = int(nx_graph.number_of_nodes() * self.sample_node_ratio)
+
+        self.subsample_cls.number_of_nodes = num_sample_nodes
         if not nx.is_connected(nx_graph):
             self.logger.debug('graph unconnected, generate random edge to connect it')
+            self.logger.info('graph unconnected, generate random edge to connect it')
             self._connect_nx_graph(nx_graph)
-
+        # if not nx.is_connected(nx_graph):
         subgraph = self.subsample_cls.sample(nx_graph)
+
+        # # 1. Check if all nodes of the subgraph are present in the original graph
+        # are_nodes_present = all(node in nx_graph.nodes for node in subgraph.nodes)
+        # # 2. Check if all nodes of the subgraph have at least one edge in the original graph
+        # are_nodes_connected = all(nx_graph.degree(node) > 0 for node in subgraph.nodes)
+        # # Combine the two checks
+        # are_all_subgraph_nodes_in_nx_graph = are_nodes_present and are_nodes_connected
+        # print('are_all_subgraph_nodes_in_nx_graph', are_all_subgraph_nodes_in_nx_graph)
+
         # if not nx.is_connected(subgraph):
-        #     self.logger.info('subgraph unconnected, generate random edge to connect it')
-        #     self._connect_nx_graph(subgraph)
+        # self.logger.info('subgraph unconnected, generate random edge to connect it')
+        # self._connect_nx_graph(subgraph)
 
         return subgraph
 
+    # def generate_subgraph(self, graph):
+    #     num_sample_nodes = int(graph.num_nodes * self.sample_node_ratio)
+    #     nx_graph = to_networkx(graph, to_undirected=True)
+    #     self.subsample_cls.number_of_nodes = num_sample_nodes
+
+    #     if not nx.is_connected(nx_graph):
+    #         self.logger.debug('graph unconnected, generate random edge to connect it')
+    #         # self._connect_nx_graph(nx_graph)
+
+    #     subgraph = self.subsample_cls.sample(nx_graph)
+    #     if not nx.is_connected(subgraph):
+    #         self.logger.info('subgraph unconnected, generate random edge to connect it')
+    #         # self._connect_nx_graph(subgraph)
+
+    #     return subgraph
+    
     def generate_subgraph_data(self, graph, subgraph_nodes):
         subgraph_nodes = list(subgraph_nodes)
         subgraph_x = graph.x[subgraph_nodes]

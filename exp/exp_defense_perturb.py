@@ -66,7 +66,7 @@ class ExpDefensePerturb(Exp):
         self.logger.info('defending subgraph inference')
 
         paras = self.data_store.load_target_model(self.target_model)
-        attack = AttackSubgraphInferII(self.target_model.model, self.target_model.model, paras['embedding_dim'], self.dataset.num_classes, self.args)
+        attack = AttackSubgraphInfer(self.target_model.model, self.target_model.model, paras['embedding_dim'], self.dataset.num_classes, self.args)
 
         is_train_attack_model = True
         if is_train_attack_model:
