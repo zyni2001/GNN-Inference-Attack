@@ -7,7 +7,7 @@ itrs=21
 log_path="temp_data_DD_0.2_diff_pool_snow_ball/embed_log_correct_setting/"
 mkdir -p ${log_path}
 # rm -rf temp_data_DD_0.2_diff_pool_snow_ball/raw_data/500/feat/DD/
-repeats=1
+repeats=4
 for ((repeat=0;repeat<$repeats;repeat++)); do
         for ((i=0;i<$itrs;i++)); do
                 cmd="CUDA_VISIBLE_DEVICES=$gpu_counter python -u main.py --configure DD_0.2_diff_pool_snow_ball --is_vary False --dataset DD --shadow_dataset DD \
@@ -20,7 +20,7 @@ for ((repeat=0;repeat<$repeats;repeat++)); do
                 > ${log_path}/${i}_repeat_${repeat}.log 2>&1 &"
 
                 echo $cmd
-                # eval $cmd
+                eval $cmd
 
                 # Increment the GPU counter
                 ((gpu_counter++))

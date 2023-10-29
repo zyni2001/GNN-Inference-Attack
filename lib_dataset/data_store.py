@@ -22,7 +22,7 @@ class DataStore:
 
     def load_embedding(self, skiped_indices):
         # load embedding list for training 
-        embed_path = self.config.EMBEDDING_PATH + f'embed_list{self.args["embed_train_itr"]}.pkl'
+        embed_path = self.config.EMBEDDING_PATH + f'embed_list_{self.args["embed_train_itr"]}.pkl'
         if not os.path.exists(embed_path):
             print('embedding file does not exist')
             exit()
@@ -32,7 +32,7 @@ class DataStore:
             embed_list_train = [embed_list[i] for i in range(len(embed_list)) if i not in skiped_indices]
 
         # load embedding list for testing
-        embed_path = self.config.EMBEDDING_PATH + f'embed_list{self.args["embed_test_itr"]}.pkl'
+        embed_path = self.config.EMBEDDING_PATH + f'embed_list_{self.args["embed_test_itr"]}.pkl'
         if not os.path.exists(embed_path):
             print('embedding file does not exist')
             exit()

@@ -48,13 +48,15 @@ class Exp:
             # raise Exception('skiped_indices is empty')
         # save skiped indices
         if self.args['is_use_feat']:
-            save_dir = self.config.EMBEDDING_PATH
+            save_dir = self.config.SKIP_INDICES_PATH
             if len(self.skiped_indices) > 0:
                 pickle.dump(self.skiped_indices, open(os.path.join(save_dir, 'skiped_indices.pkl'), 'wb'))
             else:
                 self.skiped_indices = pickle.load(open(os.path.join(save_dir, 'skiped_indices.pkl'), 'rb'))
         else:
             raise NotImplementedError
+
+        self.skiped_indices = []
         # max_num_nodes = max(data.num_nodes for data in self.dataset)
         # print(max_num_nodes)
 
